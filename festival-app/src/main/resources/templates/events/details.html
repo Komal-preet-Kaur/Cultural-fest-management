@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Event Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .event-details-card {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        .event-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px 15px 0 0;
+            padding: 2rem;
+            text-align: center;
+        }
+        .event-content {
+            padding: 2rem;
+        }
+        .detail-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        .detail-value {
+            color: #e0e0e0;
+            font-size: 1.1rem;
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-outline-custom {
+            border: 2px solid #667eea;
+            color: #667eea;
+            background: transparent;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-outline-custom:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+        .error-message {
+            text-align: center;
+            padding: 2rem;
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/home">
+                <i class="fas fa-music me-2"></i>Cultural Festival
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/home">Home</a>
+                <a class="nav-link" href="/events">All Events</a>
+                <a class="nav-link" href="/events/my-participations">My Events</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Loading State -->
+                <div id="loadingState" class="loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading event details...</span>
+                    </div>
+                </div>
+
+                <!-- Error State -->
+                <div id="errorState" class="error-message" style="display: none;">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <h4>Event Not Found</h4>
+                    <p>The event you're looking for doesn't exist or has been removed.</p>
+                    <a href="/events" class="btn btn-custom">Back to Events</a>
+                </div>
+
+                <!-- Event Details Card -->
+                <div id="eventDetailsCard" class="event-details-card" style="display: none;">
+                    <div class="event-header">
+                        <h1 id="eventName" class="mb-3">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                        </h1>
+                        <p id="eventCategory" class="lead mb-0"></p>
+                    </div>
+                    
+                    <div class="event-content">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">
+                                        <i class="fas fa-calendar me-2"></i>Event Date & Time
+                                    </div>
+                                    <div class="detail-value" id="eventDateTime"></div>
+                                </div>
+                                
+                                <div class="detail-item">
+                                    <div class="detail-label">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Location
+                                    </div>
+                                    <div class="detail-value" id="eventLocation"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="detail-item">
+                                    <div class="detail-label">
+                                        <i class="fas fa-users me-2"></i>Capacity
+                                    </div>
+                                    <div class="detail-value" id="eventCapacity"></div>
+                                </div>
+                                
+                                <div class="detail-item">
+                                    <div class="detail-label">
+                                        <i class="fas fa-tag me-2"></i>Category
+                                    </div>
+                                    <div class="detail-value" id="eventCategoryDetail"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="detail-item">
+                            <div class="detail-label">
+                                <i class="fas fa-info-circle me-2"></i>Event Description
+                            </div>
+                            <div class="detail-value" id="eventDescription">
+                                Join us for an amazing cultural experience! This event promises to showcase the best of our cultural heritage with performances, exhibitions, and interactive activities that celebrate diversity and unity.
+                            </div>
+                        </div>
+
+                        <div class="detail-item">
+                            <div class="detail-label">
+                                <i class="fas fa-clock me-2"></i>Event Status
+                            </div>
+                            <div class="detail-value" id="eventStatus"></div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="text-center mt-4">
+                            <button id="participateBtn" class="btn btn-custom me-3" onclick="participateInEvent()">
+                                <i class="fas fa-user-plus me-2"></i>Participate in Event
+                            </button>
+                            <button id="deleteBtn" class="btn btn-danger me-3" onclick="deleteEvent()" style="display: none;">
+                                <i class="fas fa-trash me-2"></i>Delete Event
+                            </button>
+                            <button class="btn btn-outline-custom" onclick="goBack()">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Events
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentEventId = null;
+        let currentEvent = null;
+
+        // Get event ID from URL
+        function getEventIdFromUrl() {
+            const path = window.location.pathname;
+            const match = path.match(/\/events\/(\d+)/);
+            return match ? parseInt(match[1]) : null;
+        }
+
+        // Load event details
+        async function loadEventDetails() {
+            const eventId = getEventIdFromUrl();
+            if (!eventId) {
+                showError();
+                return;
+            }
+
+            currentEventId = eventId;
+
+            try {
+                const response = await fetch(`/events/api/${eventId}`);
+                if (!response.ok) {
+                    throw new Error('Event not found');
+                }
+
+                const event = await response.json();
+                currentEvent = event;
+                displayEventDetails(event);
+            } catch (error) {
+                console.error('Error loading event:', error);
+                showError();
+            }
+        }
+
+        // Display event details
+        function displayEventDetails(event) {
+            document.getElementById('eventName').textContent = event.name;
+            document.getElementById('eventCategory').textContent = event.category;
+            document.getElementById('eventCategoryDetail').textContent = event.category;
+            
+            // Format date and time
+            const eventDate = new Date(event.scheduledAt);
+            const formattedDate = eventDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('eventDateTime').textContent = formattedDate;
+            
+            // Location
+            document.getElementById('eventLocation').textContent = event.location || 'To be announced';
+            
+            // Capacity
+            document.getElementById('eventCapacity').textContent = event.capacity ? `${event.capacity} people` : 'Unlimited';
+            
+            // Event status
+            const now = new Date();
+            const isUpcoming = eventDate > now;
+            const statusText = isUpcoming ? 'Upcoming Event' : 'Past Event';
+            const statusClass = isUpcoming ? 'text-success' : 'text-warning';
+            document.getElementById('eventStatus').innerHTML = `<span class="${statusClass}"><i class="fas fa-circle me-1"></i>${statusText}</span>`;
+
+            // Check if user is admin and show delete button
+            checkAdminRole();
+
+            // Hide loading, show details
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('eventDetailsCard').style.display = 'block';
+        }
+
+        // Show error state
+        function showError() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+        }
+
+        // Participate in event
+        async function participateInEvent() {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                alert('Please login first to participate in events.');
+                window.location.href = '/auth/login';
+                return;
+            }
+
+            const btn = document.getElementById('participateBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Joining...';
+
+            try {
+                const response = await fetch(`/events/api/${currentEventId}/participate`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    btn.innerHTML = '<i class="fas fa-check me-2"></i>Successfully Joined!';
+                    btn.className = 'btn btn-success me-3';
+                    btn.disabled = true;
+                    
+                    // Show success notification
+                    showNotification('Successfully joined "' + result.eventName + '"!', 'success');
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Participate in Event';
+                    
+                    if (response.status === 409) {
+                        if (result.error.includes('Already participating')) {
+                            btn.innerHTML = '<i class="fas fa-check me-2"></i>Already Joined';
+                            btn.className = 'btn btn-success me-3';
+                            btn.disabled = true;
+                        } else if (result.error.includes('full')) {
+                            btn.innerHTML = '<i class="fas fa-times me-2"></i>Event Full';
+                            btn.className = 'btn btn-danger me-3';
+                            btn.disabled = true;
+                        }
+                    }
+                    
+                    showNotification(result.error || 'Failed to join event', 'error');
+                }
+            } catch (error) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Participate in Event';
+                showNotification('Network error. Please try again.', 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
+
+        // Check if user is admin
+        function checkAdminRole() {
+            try {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const role = payload.role || 'USER';
+                    if (role === 'ADMIN') {
+                        document.getElementById('deleteBtn').style.display = 'inline-block';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking admin role:', error);
+            }
+        }
+
+        // Delete event
+        async function deleteEvent() {
+            if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login first.');
+                window.location.href = '/auth/login';
+                return;
+            }
+
+            const btn = document.getElementById('deleteBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+
+            try {
+                const response = await fetch(`/events/api/${currentEventId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    showNotification('Event deleted successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/events';
+                    }, 1500);
+                } else {
+                    const result = await response.json();
+                    showNotification(result.error || 'Failed to delete event', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-trash me-2"></i>Delete Event';
+                }
+            } catch (error) {
+                showNotification('Network error. Please try again.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash me-2"></i>Delete Event';
+            }
+        }
+
+        // Go back to events
+        function goBack() {
+            window.location.href = '/events';
+        }
+
+        // Load event details when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEventDetails();
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
