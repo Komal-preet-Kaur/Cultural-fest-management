@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: festival-app
+  datasource:
+    url: jdbc:mysql://localhost:3306/festivaldb?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: Navroot
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+
+
+jwt:
+  secret: "replace-with-a-very-long-secret-key"
+  expirationMs: 86400000
+
+scheduling:
+  service:
+    base-url: http://localhost:8081
+
+
